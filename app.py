@@ -1,12 +1,13 @@
-'''import requests
+import requests
 import pandas as pd
-from bs4 import BeautifulSoup'''
+from bs4 import BeautifulSoup
 
 from flask import Flask, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHMEY_DATABASE_URL'] ='sqlite:///' + os.path.join(basedir, 'db.sqlite')
 
@@ -25,11 +26,14 @@ def home():
     ingredient_list = db.session.query(Recipe).all()
     return render_template('base.html', recipes=recipes)
 
+
+
 '''
 # collecting our page from the website
 page = "https://www.myjewishlearning.com/the-nosher/passover-recipes-carrot-kugel/"
 soup = BeautifulSoup(requests.get(page).content, 'html.parser')
 print(soup.find('h2').text.strip())
+
 
 ingredients = []
 for li in soup.select('tasty-recipes-entry-content'):
