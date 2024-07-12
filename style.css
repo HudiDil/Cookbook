@@ -1,0 +1,29 @@
+body {
+  font-family: sans-serif;
+}
+
+nav {
+  background-color: #333;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 20px;
+  left: 0;
+  color: white;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 150px 5%;
+}
+
+.left-column {
+  width: 25%;
+}
+
+.right-column {
+  width: 65%;
+}

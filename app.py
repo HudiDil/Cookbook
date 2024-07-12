@@ -1,69 +1,119 @@
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
 import requests
-import pandas as pd
 from bs4 import BeautifulSoup
 
-from flask import Flask, render_template, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-import os
-
 app = Flask(__name__)
+DATABASE = 'recipes.db'
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHMEY_DATABASE_URL'] ='sqlite:///' + os.path.join(basedir, 'db.sqlite')
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+def initialize_db():
+    connection = get_db_connection()
+    with open('schema.sql') as f:
+        connection.executescript(f.read())
+    connection.close()
 
-class Recipe(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    ingredients = db.Column(db.Text)
-    instructions = db.Column(db.Text)
-    category = db.Column(db.String(50))
+def create_collections():
+    collections = [
+        "Soups, Sides and Starters",
+        "Main dishes - Chicken",
+        "Main dishes - Fish",
+        "Main dishes - Beef",
+        "Desserts"
+    ]
+    conn = get_db_connection()
+    for collection in collections:
+        conn.execute('INSERT OR IGNORE INTO collections (name) VALUES (?)', (collection,))
+    conn.commit()
+    conn.close()
 
-@app.get("/")
-def home():
-    ingredient_list = db.session.query(Recipe).all()
-    return render_template('base.html', recipes=recipes)
+def scrape_recipes():
+    url = "https://www.myjewishlearning.com/the-nosher/57-shabbat-dinner-recipes-youre-going-to-love/"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
+    sections = soup.select('h3, h2')
+    recipes = []
+    for section in sections:
+        category = section.get_text(strip=True)
+        collection_id = None
+        conn = get_db_connection()
+        collection = conn.execute('SELECT id FROM collections WHERE name = ?', (category,)).fetchone()
+        if collection:
+            collection_id = collection['id']
+        conn.close()
 
+        next_element = section.find_next()
+        while next_element and next_element.name not in ['h3', 'h2']:
+            if next_element.name == 'a':
+                recipe_name = next_element.get_text(strip=True)
+                recipe_link = next_element['href']
+                recipes.append((recipe_name, recipe_link, collection_id))
+            next_element = next_element.find_next()
 
-'''
-# collecting our page from the website
-page = "https://www.myjewishlearning.com/the-nosher/passover-recipes-carrot-kugel/"
-soup = BeautifulSoup(requests.get(page).content, 'html.parser')
-print(soup.find('h2').text.strip())
+    conn = get_db_connection()
+    for recipe in recipes:
+        conn.execute(
+            'INSERT INTO recipes (name, ingredients, instructions, collection_id) VALUES (?, ?, ?, ?)',
+            (recipe[0], recipe[1], '', recipe[2])
+        )
+    conn.commit()
+    conn.close()
 
+@app.route('/')
+def index():
+    conn = get_db_connection()
+    collections = conn.execute('SELECT * FROM collections').fetchall()
+    conn.close()
+    return render_template('index.html', collections=collections)
 
-ingredients = []
-for li in soup.select('tasty-recipes-entry-content'):
-    ingred = ' '.join(li.text.split())
-    ingredients.append(ingred)
-print(ingredients)
-# print(soup.prettify())  # printing each html tag on its own line
+@app.route('/add', methods=('GET', 'POST'))
+def add_recipe():
+    conn = get_db_connection()
+    collections = conn.execute('SELECT * FROM collections').fetchall()
+    conn.close()
+    if request.method == 'POST':
+        name = request.form['name']
+        ingredients = request.form['ingredients']
+        instructions = request.form['instructions']
+        collection_id = request.form['collection_id']
+        
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO recipes (name, ingredients, instructions, collection_id) VALUES (?, ?, ?, ?)',
+            (name, ingredients, instructions, collection_id)
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for('index'))
+    return render_template('add.html', collections=collections)
 
-# filtering our url search to only get the urls that contain word recipe
+@app.route('/search', methods=('GET', 'POST'))
+def search():
+    recipes = []
+    if request.method == 'POST':
+        query = request.form['query']
+        conn = get_db_connection()
+        recipes = conn.execute(
+            "SELECT * FROM recipes WHERE name LIKE ? OR ingredients LIKE ?",
+            ('%' + query + '%', '%' + query + '%')
+        ).fetchall()
+        conn.close()
+    return render_template('search.html', recipes=recipes)
 
-recipe_urls = pd.Series([a.get("href") for a in soup.find_all("a")])
-recipe_urls = recipe_urls[(recipe_urls.str.count("-")>0) &
-(recipe_urls.str.contains("/recipes/")==True) &
-(recipe_urls.str.contains("-recipes/")==True) & 
-(recipe_urls.str.contains("course")==False) & 
-(recipe_urls.str.contains("books")==False) & 
-(recipe_urls.str.endswith("recipes/")==False)].unique()
+@app.route('/recipe/<int:recipe_id>')
+def recipe(recipe_id):
+    conn = get_db_connection()
+    recipe = conn.execute('SELECT * FROM recipes WHERE id = ?', (recipe_id,)).fetchone()
+    conn.close()
+    return render_template('recipe.html', recipe=recipe)
 
-df['recipe_urls'] = "https://www.myjewishlearning.com/the-nosher/57-shabbat-dinner-recipes-youre-going-to-love/" + df['recipe_urls'].astype('str')
-
-
-recipe_name_list = soup.find(class_='m-content__body')  # our class
-
-# finding all instances of <a> tag within class
-recipe_name_list_items = recipe_name_list.find_all('a')
-# printing out all the recipe names
-for recipe_name in recipe_name_list_items:
-    names = recipe_name.contents[0]
-    links = 'https://www.myjewishlearning.com/the-nosher/57-shabbat-dinner-recipes-youre-going-to-love/' + recipe_name.get('href')
-    print(names)
-    print(links)
-
-'''
+if __name__ == '__main__':
+    initialize_db()
+    create_collections()
+    scrape_recipes()
+    app.run(host="0.0.0.0", debug=True)
