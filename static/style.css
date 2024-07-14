@@ -2,12 +2,12 @@
 
 body {
   font-family: Arial, sans-serif;
-  background-color: #f8f9fa;
+  background-color: lightblue;
   margin: 20px;
 }
 
 h1, h2 {
-  color: #343a40;
+  color: white;
 }
 
 ul {
@@ -18,13 +18,8 @@ ul {
 li {
   background-color: #fff;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 10px;
   margin-bottom: 20px;
-  padding: 15px;
-}
-
-li:hover {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 p {
@@ -38,38 +33,6 @@ a {
 
 a:hover {
   text-decoration: underline;
-}
-
-.search-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.search-container input[type=text] {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.search-container input[type=submit] {
-  background-color: #007bff;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.search-container input[type=submit]:hover {
-  background-color: #0056b3;
 }
 
 .container {

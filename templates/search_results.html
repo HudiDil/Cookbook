@@ -9,6 +9,7 @@
 <body>
     <h1>Search Results</h1>
     <p>Showing results for: <strong>{{ query }}</strong></p>
+    <p>Showing results for: <strong>{{ query }}</strong></p>
     
     {% if results %}
     <ul>
@@ -17,7 +18,6 @@
             <h2>{{ recipe['title'] }}</h2>
             <p><strong>Ingredients:</strong><br>{{ recipe['ingredients'] }}</p>
             <p><strong>Instructions:</strong><br>{{ recipe['instructions'] }}</p>
-            <p><strong>Category:</strong> {{ recipe['category'] }}</p>
         </li>
         {% endfor %}
     </ul>

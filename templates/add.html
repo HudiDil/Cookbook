@@ -12,13 +12,6 @@
     <label for="instructions">Instructions:</label><br>
     <textarea id="instructions" name="instructions" required></textarea><br><br>
     
-    <label for="collection_id">Collection:</label><br>
-    <select id="collection_id" name="collection_id" required>
-        {% for collection in collections %}
-        <option value="{{ collection['id'] }}">{{ collection['name'] }}</option>
-        {% endfor %}
-    </select><br><br>
-    
     <button type="submit">Add Recipe</button>
 </form>
 {% endblock %}
