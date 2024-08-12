@@ -8,15 +8,36 @@ def web_scraping():
     soup = BeautifulSoup(response.content, 'html.parser')
 
     recipes = []
-    for recipe in soup.find_all('article', class_='recipe-card'):
-        title = recipe.find('h2').get_text().strip()
-        ingredients = recipe.find('ul').get_text().strip().split('\n')
-        instructions = recipe.find('div', class_='recipe-content').get_text().strip()
-        category = section.get_text(strip=True)
-        recipes.append((title, '\n'.join(ingredients), instructions, category))
+
+    for section in soup.find_all('section', class_='m-detail--body'):
+        if category_header:
+            category = category_header.get_text(strip=True)
+
+        for recipe in section.find_all('div', class_='tasty-recipes'):
+            title = recipe.find('h2', class_='entry-title').get_text().strip()
+
+            ingredients_list = recipe.find('div', class_='tasty-recipes-ingredients')
+            if ingredients_list:
+                ingredients = ingredients_list.get_text(separator='\n').strip()
+
+            instructions_div = recipe.find('div', class_='tasty-recipes-instructions')
+            if instructions_div:
+                instructions = instructions_div.get_text(separator='\n').strip()
+
+            recipes.append((title, ingredients, instructions, category))
 
     conn = sqlite3.connect('recipes.db')
     c = conn.cursor()
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS recipes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            ingredients TEXT,
+            instructions TEXT,
+            category TEXT
+        )
+    ''')
 
     c.executemany('INSERT INTO recipes (title, ingredients, instructions, category) VALUES (?, ?, ?, ?)', recipes)
 
