@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Recipe Collections</h2>
+<ul>
+    {% for collection in collections %}
+    <li>{{ collection['name'] }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

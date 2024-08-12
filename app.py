@@ -1,11 +1,13 @@
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
+
 from flask import Flask, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
-'''
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHMEY_DATABASE_URL'] ='sqlite:///' + os.path.join(basedir, 'db.sqlite')
 
@@ -18,12 +20,13 @@ class Recipe(db.Model):
     ingredients = db.Column(db.Text)
     instructions = db.Column(db.Text)
     category = db.Column(db.String(50))
-'''
+
 @app.get("/")
 def home():
-    #ingredient_list = db.session.query(Recipe).all()
-    #return render_template('base.html', recipes=recipes)
-    return "hello"
+    ingredient_list = db.session.query(Recipe).all()
+    return render_template('base.html', recipes=recipes)
+
+
 
 '''
 # collecting our page from the website

@@ -9,3 +9,5 @@ Shabbat Recipes - store and manage their favorite recipes. Users should be able 
 
 pip install flask
 pip install flask sqlalchemy
+
+sqlite3 recipes.db < schema.sql
