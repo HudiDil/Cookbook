@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -11,27 +11,41 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+# Define the Recipe model
 class Recipe(db.Model):
-    __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     ingredients = db.Column(db.Text, nullable=False)
     instructions = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50))
 
-@app.before_first_request
-def setup_database():
-    db.create_all()
-
 @app.route("/")
-def home():
+def index():
     recipes = Recipe.query.all()
-    print(recipes)  # debugging
-    return render_template('base.html', recipes=recipes)
+    return render_template('index.html', recipes=recipes)
+
+@app.route("/add", methods=['GET', 'POST'])
+def add_recipe():
+    if request.method == 'POST':
+        title = request.form['title']
+        ingredients = request.form['ingredients']
+        instructions = request.form['instructions']
+        category = request.form['category']
+        
+        new_recipe = Recipe(title=title, ingredients=ingredients, instructions=instructions, category=category)
+        db.session.add(new_recipe)
+        db.session.commit()
+        return redirect(url_for('index'))
+
+    return render_template('add_recipe.html')
+
+@app.route("/search", methods=['GET'])
+def search():
+    query = request.args.get('query')
+    recipes = Recipe.query.filter(
+        (Recipe.title.contains(query)) | (Recipe.ingredients.contains(query))
+    ).all()
+    return render_template('search_results.html', recipes=recipes, query=query)
 
 if __name__ == '__main__':
-    # Ensure that the database is created before running the app
-    with app.app_context():
-        setup_database()
-
     app.run(debug=True)

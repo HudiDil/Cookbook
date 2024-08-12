@@ -1,48 +1,29 @@
 import requests
 from bs4 import BeautifulSoup
-import sqlite3
+from app import app, db, Recipe
 
-def web_scraping():
-    url = 'https://www.myjewishlearning.com/the-nosher/57-shabbat-dinner-recipes-youre-going-to-love/'
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+def scrape_recipes():
+    with app.app_context():
+        url = 'https://www.myjewishlearning.com/the-nosher/57-shabbat-dinner-recipes-youre-going-to-love/'
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-    recipes = []
-
-    for section in soup.find_all('section', class_='m-detail--body'):
-        if category_header:
-            category = category_header.get_text(strip=True)
-
-        for recipe in section.find_all('div', class_='tasty-recipes'):
-            title = recipe.find('h2', class_='entry-title').get_text().strip()
-
-            ingredients_list = recipe.find('div', class_='tasty-recipes-ingredients')
-            if ingredients_list:
-                ingredients = ingredients_list.get_text(separator='\n').strip()
-
-            instructions_div = recipe.find('div', class_='tasty-recipes-instructions')
-            if instructions_div:
-                instructions = instructions_div.get_text(separator='\n').strip()
+        recipes = []
+        for recipe in soup.find_all('article', class_='recipe-card'):
+            title = recipe.find('h2').get_text().strip()
+            ingredients_list = recipe.find('ul')
+            ingredients = '\n'.join([item.get_text().strip() for item in ingredients_list.find_all('li')]) if ingredients_list else 'No ingredients listed'
+            instructions = recipe.find('div', class_='recipe-content').get_text().strip() if recipe.find('div', class_='recipe-content') else 'No instructions listed'
+            category = 'Unknown'  # Adjust this if you have a way to determine the category
 
             recipes.append((title, ingredients, instructions, category))
 
-    conn = sqlite3.connect('recipes.db')
-    c = conn.cursor()
+        # Insert into the database
+        for title, ingredients, instructions, category in recipes:
+            new_recipe = Recipe(title=title, ingredients=ingredients, instructions=instructions, category=category)
+            db.session.add(new_recipe)
+        db.session.commit()
+        print(f"{len(recipes)} recipes have been scraped and added to the database.")
 
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS recipes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            ingredients TEXT,
-            instructions TEXT,
-            category TEXT
-        )
-    ''')
-
-    c.executemany('INSERT INTO recipes (title, ingredients, instructions, category) VALUES (?, ?, ?, ?)', recipes)
-
-    conn.commit()
-    conn.close()
-
-if __name__ == '__main__':
-    web_scraping()
+if __name__ == "__main__":
+    scrape_recipes()
