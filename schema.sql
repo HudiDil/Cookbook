@@ -1,6 +1,3 @@
--- schema.sql
-
--- Recipes table
 CREATE TABLE recipes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,

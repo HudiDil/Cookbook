@@ -8,9 +8,9 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'recipes.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
-# Define the Recipe model
 class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True)
@@ -24,8 +24,13 @@ def setup_database():
 
 @app.route("/")
 def home():
-    recipes = Recipe.query.all() 
+    recipes = Recipe.query.all()
+    print(recipes)  # debugging
     return render_template('base.html', recipes=recipes)
 
 if __name__ == '__main__':
+    # Ensure that the database is created before running the app
+    with app.app_context():
+        setup_database()
+
     app.run(debug=True)
