@@ -1,25 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipes</title>
-</head>
-<body>
-    <h1>Recipe List</h1>
-    <ul>
-        {% for recipe in recipes %}
-        <li>
-            <h2>{{ recipe.title }}</h2>
-            <p><strong>Category:</strong> {{ recipe.category }}</p>
-            <p><strong>Ingredients:</strong></p>
-            <pre>{{ recipe.ingredients }}</pre>
-            <p><strong>Instructions:</strong></p>
-            <pre>{{ recipe.instructions }}</pre>
-        </li>
-        {% else %}
-        <p>No recipes found.</p>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Recipe Collections</h2>
+<ul>
+    {% for collection in collections %}
+    <li>{{ collection['name'] }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

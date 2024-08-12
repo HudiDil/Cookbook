@@ -1,15 +1,26 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<h2>Search Recipes</h2>
-<form method="post">
-    <input type="text" name="query" placeholder="Search by name or ingredient" required>
-    <button type="submit">Search</button>
-</form>
-
-<ul>
-    {% for recipe in recipes %}
-    <li><a href="{{ url_for('recipe', recipe_id=recipe['id']) }}">{{ recipe['name'] }}</a></li>
-    {% endfor %}
-</ul>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <form action="{{ url_for('search') }}" method="GET">
+        <input type="text" name="query" value="{{ query }}" placeholder="Search...">
+        <input type="submit" value="Search">
+    </form>
+    <ul>
+        {% for recipe in recipes %}
+        <li>
+            <strong>{{ recipe.title }}</strong><br>
+            <em>{{ recipe.category }}</em><br>
+            Ingredients: {{ recipe.ingredients }}<br>
+            Instructions: {{ recipe.instructions }}
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('home') }}">Back to Home</a>
+</body>
+</html>
