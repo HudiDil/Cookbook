@@ -19,6 +19,7 @@ class Recipe(db.Model):
     instructions = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50))
 
+@app.before_first_request
 def setup_database():
     db.create_all()
 
